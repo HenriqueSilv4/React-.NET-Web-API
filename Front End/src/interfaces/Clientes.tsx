@@ -3,4 +3,5 @@ export interface Clientes {
     cpf: string;
     nome: string;
     celular: string;
+    dataDoCadastro: string;
 };

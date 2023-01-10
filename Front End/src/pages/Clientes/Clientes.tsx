@@ -17,14 +17,16 @@ export default function PaginaClientes() {
         idCliente: '',
         cpf: '',
         nome: '',
-        celular: ''
+        celular: '',
+        dataDoCadastro: ''
     })
 
     const [formUpdateData, setFormUpdateData] = useState<Clientes>({
         idCliente: '',
         cpf: '',
         nome: '',
-        celular: ''
+        celular: '',
+        dataDoCadastro: ''
     })
 
     const [isFetching, setIsFetching] = useState(true)
@@ -33,23 +35,23 @@ export default function PaginaClientes() {
 
     function Alerta(mensagem: string, Tipo: TipoAlerta) 
     {
-        if (Tipo === TipoAlerta.SUCESSO)
-            return (
-                toast.success(mensagem, {
-                    toastId: 1
-                })
-            )
-        if (Tipo === TipoAlerta.ERRO) {
-            return (
-                toast.error(mensagem)
-            )
-        }
-        if (Tipo === TipoAlerta.AVISO) {
-            return (
-                toast.warning(mensagem, {
-                    toastId: 2
-                })
-            )
+        switch(Tipo)
+        {
+            case TipoAlerta.SUCESSO: {
+                return (
+                    toast.success(mensagem)
+                )
+            }
+            case TipoAlerta.ERRO:{
+                return (
+                    toast.error(mensagem)
+                )
+            }
+            case TipoAlerta.AVISO:{
+                return (
+                    toast.warning(mensagem)
+                )
+            }
         }
     }
 
@@ -104,7 +106,7 @@ export default function PaginaClientes() {
 
         e.preventDefault()
 
-        axios.post<ResponseResult>('https://localhost:44398/api/Cliente/Cadastrar', formCreateData)
+        axios.post<ResponseResult>('https://localhost:44398/api/Clientes/Cadastrar', formCreateData)
             .then(response => 
             {
                 setException(response.data)
@@ -123,7 +125,7 @@ export default function PaginaClientes() {
     function readData() 
     {
         return (
-            axios.get<Clientes[]>('https://localhost:44398/api/Cliente/Selecionar')
+            axios.get<Clientes[]>('https://localhost:44398/api/Clientes/Selecionar')
                 .then(response => {
                     setIsFetching(false)
                     setData(response.data)
@@ -139,7 +141,7 @@ export default function PaginaClientes() {
 
         e.preventDefault()
 
-        axios.put<ResponseResult>('https://localhost:44398/api/Cliente/Atualizar', formUpdateData)
+        axios.put<ResponseResult>('https://localhost:44398/api/Clientes/Atualizar', formUpdateData)
             .then(response => 
             {
                 setException(response.data)
@@ -147,6 +149,7 @@ export default function PaginaClientes() {
                 {
                     if (response.data.sucesso === true) 
                     {
+                        readData()
                         setPageStatus(PageStatus.INDEX)
                         Alerta('Registro atualizado com sucesso.', TipoAlerta.SUCESSO)
                     }
@@ -159,7 +162,7 @@ export default function PaginaClientes() {
 
         e.preventDefault()
 
-        axios.delete<ResponseResult>('https://localhost:44398/api/Cliente/Deletar', { data: formUpdateData })
+        axios.delete<ResponseResult>('https://localhost:44398/api/Clientes/Deletar', { data: formUpdateData })
             .then(response => {
                 setException(response.data)
                 if (response.data.sucesso === true) {
@@ -216,6 +219,7 @@ export default function PaginaClientes() {
                             <th scope='col'>Nome</th>
                             <th scope='col'>CPF</th>
                             <th scope='col'>Celular</th>
+                            <th scope='col'>Data do Cadastro</th>
                             <th scope='col'></th>
                         </tr>
                     </thead>
@@ -226,6 +230,7 @@ export default function PaginaClientes() {
                                     <td className='align-middle'>{x.nome}</td>
                                     <td className='align-middle'>{x.cpf}</td>
                                     <td className='align-middle'>{x.celular}</td>
+                                    <td className='align-middle'>{x.dataDoCadastro}</td>
                                     <td><button className='btn btn-primary' onClick={() => { setPageStatus(PageStatus.EDIT); setFormUpdateData(x); }} value={x.idCliente}>Editar</button></td>
                                 </tr>
                             )
