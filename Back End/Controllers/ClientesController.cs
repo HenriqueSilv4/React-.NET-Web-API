@@ -23,9 +23,7 @@ namespace CrudEstudo.Controllers
         [Route("Cadastrar")]
         public ResponseResult Create(ClientesJSON json)
         {
-            var response = new ResponseResult();
-            
-            return response;
+            return bll.Create(json);
         }
 
         [HttpGet]
@@ -46,9 +44,7 @@ namespace CrudEstudo.Controllers
         [Route("Deletar")]
         public ResponseResult Delete(ClientesJSON json)
         {
-             var response = new ResponseResult();
-            
-            return response;
+            return bll.Delete(json);
         }
     }
 }

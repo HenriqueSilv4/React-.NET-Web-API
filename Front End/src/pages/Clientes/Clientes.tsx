@@ -1,6 +1,6 @@
 import { PageStatus } from '../../enums/PageStatus'
 import { TipoAlerta } from '../../enums/TipoAlerta'
-import { useEffect, useState } from 'react'
+import { HtmlHTMLAttributes, useEffect, useState } from 'react'
 import { ResponseResult } from '../../interfaces/ResponseResult'
 import { Clientes } from '../../interfaces/Clientes'
 import axios from 'axios'
@@ -14,7 +14,7 @@ export default function PaginaClientes() {
     const [exception, setException] = useState<ResponseResult>()
 
     const [formCreateData, setFormCreateData] = useState<Clientes>({
-        idCliente: '',
+        idCliente: '0',
         cpf: '',
         nome: '',
         celular: '',
@@ -55,13 +55,17 @@ export default function PaginaClientes() {
         }
     }
 
-    function checarErrosCampo(campo: string) 
+    function validarCampo(campo: string) 
     {
-        const Erro = exception?.erros.find((x) => x.campo == campo)
+        const listaErros = exception?.erros.filter((x) => x.campo === campo).map(item => 
+            <div className='invalid-feedback'>
+                {item.mensagem}
+            </div>
+        )
 
         const Campo = document.getElementById(campo)
 
-        if (Erro !== undefined) 
+        if (listaErros !== undefined && listaErros?.length > 0) 
         {
             Campo?.classList.add('is-invalid')
         }
@@ -70,11 +74,7 @@ export default function PaginaClientes() {
             Campo?.classList.remove('is-invalid')
         }
         
-        return (
-            <div className='invalid-feedback'>
-                {Erro?.mensagem}
-            </div>
-        )
+        return listaErros
     }
     
     function alimentarFormCreate(e: React.ChangeEvent<HTMLInputElement>) 
@@ -165,7 +165,9 @@ export default function PaginaClientes() {
         axios.delete<ResponseResult>('https://localhost:44398/api/Clientes/Deletar', { data: formUpdateData })
             .then(response => {
                 setException(response.data)
-                if (response.data.sucesso === true) {
+                if (response.data.sucesso === true) 
+                {
+                    readData()
                     setPageStatus(PageStatus.INDEX)
                     Alerta('Registro deletado com sucesso.', TipoAlerta.SUCESSO)
                 }
@@ -272,19 +274,19 @@ export default function PaginaClientes() {
                 <div className='shadow-lg rounded w-50 mx-auto mt-5'>
                     <form onSubmit={createData} className='d-grid gap-3 p-5'>
                         <div className='form-floating'>
-                            <input onChange={alimentarFormCreate} value={formCreateData.cpf} type='text' placeholder='#' maxLength={11} autoComplete={'off'} className='form-control' id='cpf' name='cpf' />
+                            <input onChange={alimentarFormCreate} value={formCreateData.cpf} type='text' placeholder='#' minLength={11} maxLength={11} autoComplete={'off'} className='form-control' id='cpf' name='cpf' />
                             <label htmlFor='cpf' className='text-dark'>CPF</label>
-                            {checarErrosCampo('cpf')}
+                            {validarCampo('cpf')}
                         </div>
                         <div className='form-floating'>
                             <input onChange={alimentarFormCreate} value={formCreateData.nome} type='text' placeholder='#' maxLength={128} autoComplete={'off'} className='form-control' id='nome' name='nome' />
                             <label htmlFor='nome' className='text-dark'>Nome</label>
-                            {checarErrosCampo('nome')}
+                            {validarCampo('nome')}
                         </div>
                         <div className='form-floating'>
                             <input onChange={alimentarFormCreate} value={formCreateData.celular} type='text' placeholder='#' maxLength={32} autoComplete={'off'} className='form-control' id='celular' name='celular' />
                             <label htmlFor='celular' className='text-dark'>Celular</label>
-                            {checarErrosCampo('celular')}
+                            {validarCampo('celular')}
                         </div>
                         <div className='d-flex justify-content-center'>
                             <button type='submit' className='btn btn-success w-25'>Cadastrar</button>
@@ -339,12 +341,12 @@ export default function PaginaClientes() {
                         <div className='form-floating'>
                             <input onChange={alimentarFormUpdate} value={formUpdateData?.nome} type='text' placeholder='#' maxLength={128} autoComplete={'off'} className='form-control' id='nome' name='nome' />
                             <label htmlFor='nome' className='text-dark'>Nome</label>
-                            {checarErrosCampo('nome')}
+                            {validarCampo('nome')}
                         </div>
                         <div className='form-floating'>
                             <input onChange={alimentarFormUpdate} value={formUpdateData?.celular} type='text' placeholder='#' maxLength={32} autoComplete={'off'} className='form-control' id='celular' name='celular' />
                             <label htmlFor='celular' className='text-dark'>Celular</label>
-                            {checarErrosCampo('celular')}
+                            {validarCampo('celular')}
                         </div>
                         <div className='d-flex justify-content-center'>
                             <button type='submit' className='btn btn-primary'>Salvar</button>

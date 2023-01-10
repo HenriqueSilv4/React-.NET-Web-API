@@ -11,6 +11,55 @@ namespace Back_End.BLL
     public class ClientesBLL
     {
         private readonly DAO Context = new DAO();
+        public ResponseResult Create(ClientesJSON json)
+        {
+            var response = new ResponseResult();
+
+            response.Erros = ValidarCampos(json);
+
+            try
+            {
+                if(response.Erros.Count != 0)
+                {
+                    throw new Exception();
+                }
+
+                if(Context.Clientes.Any(x => x.CPF.Equals(json.CPF)))
+                {
+                    response.Erros.Add(new ErroJSON
+                    {
+                        Campo = "alerta",
+                        Mensagem = "Não foi possível realizar o cadastro.\nO CPF informado já está cadastrado no sistema."
+                    });
+
+                    throw new Exception();
+                }
+
+                var Cliente = new Clientes();
+
+                Cliente.CPF = json.CPF;
+
+                Cliente.Nome = json.Nome;
+
+                Cliente.Celular = json.Celular;
+
+                Cliente.DataDoCadastro = DateTime.Now.Date;
+
+                Context.Clientes.Add(Cliente);
+               
+                Context.SaveChanges();
+                
+                Context.Dispose();
+                
+                response.Sucesso = true;
+            }
+            catch(Exception ex)
+            {
+                response.Sucesso = false;
+            }
+
+            return response;
+        }
 
         public Clientes[] Read()
         {
@@ -28,6 +77,15 @@ namespace Back_End.BLL
                 if(response.Erros.Count != 0)
                 {
                     throw new Exception();
+                }
+
+                if(!Context.Clientes.Any(x => x.IdCliente.Equals(json.IdCliente)))
+                {
+                    response.Erros.Add(new ErroJSON
+                    {
+                        Campo = "alerta",
+                        Mensagem = "O cadastro desse cliente já foi deletado e não existe mais."
+                    });
                 }
 
                 var Cliente = Context.Clientes.Find(json.IdCliente);
@@ -52,16 +110,77 @@ namespace Back_End.BLL
             return response;
         }
 
+        public ResponseResult Delete(ClientesJSON json)
+        {
+            var response = new ResponseResult();
+
+            try
+            {
+
+                if(!Context.Clientes.Any(x => x.IdCliente.Equals(json.IdCliente)))
+                {
+                    response.Erros.Add(new ErroJSON
+                    {
+                        Campo = "alerta",
+                        Mensagem = "O cadastro desse cliente já foi deletado e não existe mais."
+                    });
+                }
+
+                var Cliente = Context.Clientes.Find(json.IdCliente);
+
+                Context.Clientes.Remove(Cliente);
+               
+                Context.SaveChanges();
+                
+                Context.Dispose();
+                
+                response.Sucesso = true;
+            }
+            catch(Exception ex)
+            {
+                response.Sucesso = false;
+            }
+
+            return response;
+        }
+
         public List<ErroJSON> ValidarCampos(ClientesJSON json)
         {
             var Erros = new List<ErroJSON>();
 
-            if(string.IsNullOrEmpty(json.Nome))
+            if(string.IsNullOrEmpty(json.CPF) || string.IsNullOrWhiteSpace(json.CPF))
+            {
+                Erros.Add(new ErroJSON
+                {
+                    Campo = "cpf",
+                    Mensagem = "O campo não pode estar vazio."
+                });
+            }
+
+            if(json.CPF.Any(char.IsLetter))
+            {
+                Erros.Add(new ErroJSON
+                {
+                    Campo = "cpf",
+                    Mensagem = "O campo não pode conter letras."
+                });
+            }
+
+            if(json.CPF.Length != 11)
+            {
+                Erros.Add(new ErroJSON
+                {
+                    Campo = "cpf",
+                    Mensagem = "Digite todos os 11 caracteres para validar o CPF."
+                });
+            }
+
+            if(string.IsNullOrEmpty(json.Nome) || string.IsNullOrWhiteSpace(json.Nome))
             {
                 Erros.Add(new ErroJSON
                 {
                     Campo = "nome",
-                    Mensagem = "O campo está vazio."
+                    Mensagem = "O campo não pode estar vazio."
                 });
             }
 
@@ -74,7 +193,7 @@ namespace Back_End.BLL
                 });
             }
 
-            if(string.IsNullOrEmpty(json.Celular))
+            if(string.IsNullOrEmpty(json.Celular) || string.IsNullOrWhiteSpace(json.Celular))
             {
                 Erros.Add(new ErroJSON
                 {
@@ -89,15 +208,6 @@ namespace Back_End.BLL
                 {
                     Campo = "celular",
                     Mensagem = "O campo não pode conter letras."
-                });
-            }
-
-            if(!Context.Clientes.Any(x=> x.IdCliente.Equals(json.IdCliente)))
-            {
-                Erros.Add(new ErroJSON
-                {
-                    Campo = "alerta",
-                    Mensagem = "O cadastro desse cliente já foi deletado e não existe mais."
                 });
             }
 

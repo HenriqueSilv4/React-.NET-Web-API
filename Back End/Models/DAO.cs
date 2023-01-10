@@ -34,27 +34,11 @@ namespace Back_End.Models
 
             modelBuilder.Entity<Clientes>(entity =>
             {
-                entity.HasKey(e => e.IdCliente);
+                entity.Property(e => e.CPF).IsUnicode(false);
 
-                entity.HasIndex(e => e.CPF, "IX_Clientes")
-                    .IsUnique();
+                entity.Property(e => e.Celular).IsUnicode(false);
 
-                entity.Property(e => e.CPF)
-                    .IsRequired()
-                    .HasMaxLength(11)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Celular)
-                    .IsRequired()
-                    .HasMaxLength(32)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.DataDoCadastro).HasColumnType("date");
-
-                entity.Property(e => e.Nome)
-                    .IsRequired()
-                    .HasMaxLength(128)
-                    .IsUnicode(false);
+                entity.Property(e => e.Nome).IsUnicode(false);
             });
 
             OnModelCreatingPartial(modelBuilder);
