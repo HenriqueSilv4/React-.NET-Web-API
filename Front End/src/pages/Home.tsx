@@ -1,9 +1,16 @@
+import { Link } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
 export default function Home() {
     return (
+
+        
+        
         <div className='container-fluid mt-2'>
 
+            <Link to="/">Home</Link>
+            <Link to="/clientes">Clientes</Link>
+            
             <ToastContainer
                 position='bottom-right'
                 autoClose={5000}

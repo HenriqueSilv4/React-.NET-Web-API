@@ -1,15 +1,125 @@
 import { PageStatus } from '../../enums/PageStatus'
 import { TipoAlerta } from '../../enums/TipoAlerta'
-import { HtmlHTMLAttributes, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ResponseResult } from '../../interfaces/ResponseResult'
 import { Clientes } from '../../interfaces/Clientes'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { Button, Input, InputRef, Space, Table } from 'antd'
+import { ColumnsType, ColumnType } from 'antd/es/table'
+import { SearchOutlined } from '@ant-design/icons'
+import { FilterConfirmProps } from 'antd/es/table/interface'
+import { title } from 'process'
 
 export default function PaginaClientes() {
 
     const [data, setData] = useState<Clientes[]>()
+    const searchInput = useRef<InputRef>(null);
+
+    const handleSearch = (
+        selectedKeys: string[],
+        confirm: (param?: FilterConfirmProps) => void,
+        dataIndex: DataIndex,
+    ) => {
+        confirm();
+    };
+
+    const handleReset = (clearFilters: () => void) => {
+        clearFilters();
+    };
+
+    type DataIndex = keyof Clientes;
+
+    const filtrarResultado = (dataIndex: DataIndex): ColumnType<Clientes> => ({
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+            <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+                <Input
+                    ref={searchInput}
+                    placeholder={`Buscar ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+                    style={{ marginBottom: 8, display: 'block' }}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+                        icon={<SearchOutlined />}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Buscar
+                    </Button>
+                    <Button
+                        onClick={() => clearFilters && handleReset(clearFilters)}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Resetar
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            confirm({ closeDropdown: false });
+                        }}
+                    >
+                        Filtrar
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            close();
+                        }}
+                    >
+                        close
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered: boolean) => (
+            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+        ),
+        onFilter: (value, record) =>
+            record[dataIndex]
+                .toString()
+                .toLowerCase()
+                .includes((value as string).toLowerCase()),
+        onFilterDropdownOpenChange: (visible) => {
+            if (visible) {
+                setTimeout(() => searchInput.current?.select(), 100);
+            }
+        },
+    });
+
+    const colunas: ColumnsType<Clientes> = [
+        {
+            title: 'Nome',
+            dataIndex: 'nome',
+            ...filtrarResultado('nome'),
+            width: '25%'
+        },
+        {
+            title: 'CPF',
+            dataIndex: 'cpf',
+            ...filtrarResultado('cpf'),
+            width: '25%'
+        },
+        {
+            title: 'Celular',
+            dataIndex: 'celular',
+            ...filtrarResultado('celular'),
+            width: '25%'
+        },
+        {
+            title: 'Data do Cadastro',
+            dataIndex: 'dataDoCadastro',
+            width: '25%'
+        },
+    ];
 
     const [exception, setException] = useState<ResponseResult>()
 
@@ -33,21 +143,19 @@ export default function PaginaClientes() {
 
     const [status, setPageStatus] = useState<PageStatus>()
 
-    function Alerta(mensagem: string, Tipo: TipoAlerta) 
-    {
-        switch(Tipo)
-        {
+    function Alerta(mensagem: string, Tipo: TipoAlerta) {
+        switch (Tipo) {
             case TipoAlerta.SUCESSO: {
                 return (
                     toast.success(mensagem)
                 )
             }
-            case TipoAlerta.ERRO:{
+            case TipoAlerta.ERRO: {
                 return (
                     toast.error(mensagem)
                 )
             }
-            case TipoAlerta.AVISO:{
+            case TipoAlerta.AVISO: {
                 return (
                     toast.warning(mensagem)
                 )
@@ -55,9 +163,8 @@ export default function PaginaClientes() {
         }
     }
 
-    function validarCampo(campo: string) 
-    {
-        const listaErros = exception?.erros.filter((x) => x.campo === campo).map(item => 
+    function validarCampo(campo: string) {
+        const listaErros = exception?.erros.filter((x) => x.campo === campo).map(item =>
             <div className='invalid-feedback'>
                 {item.mensagem}
             </div>
@@ -65,20 +172,17 @@ export default function PaginaClientes() {
 
         const Campo = document.getElementById(campo)
 
-        if (listaErros !== undefined && listaErros?.length > 0) 
-        {
+        if (listaErros !== undefined && listaErros?.length > 0) {
             Campo?.classList.add('is-invalid')
         }
-        else
-        {
+        else {
             Campo?.classList.remove('is-invalid')
         }
-        
+
         return listaErros
     }
-    
-    function alimentarFormCreate(e: React.ChangeEvent<HTMLInputElement>) 
-    {
+
+    function alimentarFormCreate(e: React.ChangeEvent<HTMLInputElement>) {
 
         const { value, name } = e.target
 
@@ -89,8 +193,7 @@ export default function PaginaClientes() {
 
     }
 
-    function alimentarFormUpdate(e: React.ChangeEvent<HTMLInputElement>) 
-    {
+    function alimentarFormUpdate(e: React.ChangeEvent<HTMLInputElement>) {
 
         const { value, name } = e.target
 
@@ -101,19 +204,15 @@ export default function PaginaClientes() {
 
     }
 
-    function createData(e: React.FormEvent<HTMLFormElement>) 
-    {
+    function createData(e: React.FormEvent<HTMLFormElement>) {
 
         e.preventDefault()
 
         axios.post<ResponseResult>('https://localhost:44398/api/Clientes/Cadastrar', formCreateData)
-            .then(response => 
-            {
+            .then(response => {
                 setException(response.data)
-                if (response.data !== undefined) 
-                {
-                    if (response.data.sucesso === true) 
-                    {
+                if (response.data !== undefined) {
+                    if (response.data.sucesso === true) {
                         readData()
                         setPageStatus(PageStatus.INDEX)
                         Alerta('Cadastro criado com sucesso.', TipoAlerta.SUCESSO)
@@ -122,8 +221,7 @@ export default function PaginaClientes() {
             })
     }
 
-    function readData() 
-    {
+    function readData() {
         return (
             axios.get<Clientes[]>('https://localhost:44398/api/Clientes/Selecionar')
                 .then(response => {
@@ -136,19 +234,15 @@ export default function PaginaClientes() {
         )
     }
 
-    function updateData(e: React.FormEvent<HTMLFormElement>) 
-    {
+    function updateData(e: React.FormEvent<HTMLFormElement>) {
 
         e.preventDefault()
 
         axios.put<ResponseResult>('https://localhost:44398/api/Clientes/Atualizar', formUpdateData)
-            .then(response => 
-            {
+            .then(response => {
                 setException(response.data)
-                if(response.data !== undefined)
-                {
-                    if (response.data.sucesso === true) 
-                    {
+                if (response.data !== undefined) {
+                    if (response.data.sucesso === true) {
                         readData()
                         setPageStatus(PageStatus.INDEX)
                         Alerta('Registro atualizado com sucesso.', TipoAlerta.SUCESSO)
@@ -157,16 +251,14 @@ export default function PaginaClientes() {
             })
     }
 
-    function deleteData(e: React.FormEvent<HTMLFormElement>) 
-    {
+    function deleteData(e: React.FormEvent<HTMLFormElement>) {
 
         e.preventDefault()
 
         axios.delete<ResponseResult>('https://localhost:44398/api/Clientes/Deletar', { data: formUpdateData })
             .then(response => {
                 setException(response.data)
-                if (response.data.sucesso === true) 
-                {
+                if (response.data.sucesso === true) {
                     readData()
                     setPageStatus(PageStatus.INDEX)
                     Alerta('Registro deletado com sucesso.', TipoAlerta.SUCESSO)
@@ -181,30 +273,11 @@ export default function PaginaClientes() {
         readData()
     }, [])
 
-    if (status === PageStatus.INDEX && !isFetching) 
-    {
+    if (status === PageStatus.INDEX && !isFetching) {
         return (
             <div className='container-fluid mt-2'>
 
-                <ToastContainer
-                    position='bottom-right'
-                    autoClose={5000}
-                    hideProgressBar={true}
-                    newestOnTop={true}
-                    closeButton={false}
-                    closeOnClick={false}
-                    rtl={false}
-                    pauseOnFocusLoss={false}
-                    draggable={false}
-                    pauseOnHover={false}
-                    theme='light'
-                />
-                
                 <div className='d-flex justify-content-between'>
-
-                    <h4>
-                        Lista de Clientes
-                    </h4>
 
                     <button onClick={() => setPageStatus(PageStatus.NEW)} className='btn btn-success p-2'>
                         Cadastrar
@@ -212,39 +285,13 @@ export default function PaginaClientes() {
 
                 </div>
 
-                <table className='table table-striped table-hover mt-1'>
-                    <caption>
-                        Nº de Registros: {data?.length}
-                    </caption>
-                    <thead>
-                        <tr>
-                            <th scope='col'>Nome</th>
-                            <th scope='col'>CPF</th>
-                            <th scope='col'>Celular</th>
-                            <th scope='col'>Data do Cadastro</th>
-                            <th scope='col'></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            data?.map(x =>
-                                <tr key={x.idCliente}>
-                                    <td className='align-middle'>{x.nome}</td>
-                                    <td className='align-middle'>{x.cpf}</td>
-                                    <td className='align-middle'>{x.celular}</td>
-                                    <td className='align-middle'>{x.dataDoCadastro}</td>
-                                    <td><button className='btn btn-primary' onClick={() => { setPageStatus(PageStatus.EDIT); setFormUpdateData(x); }} value={x.idCliente}>Editar</button></td>
-                                </tr>
-                            )
-                        }
-                    </tbody>
-                </table>
+                <Table columns={colunas} dataSource={data} />
+
             </div>
         )
     }
 
-    if (status === PageStatus.NEW) 
-    {
+    if (status === PageStatus.NEW) {
         return (
             <div className='container-fluid mt-2'>
 
@@ -297,8 +344,7 @@ export default function PaginaClientes() {
         )
     }
 
-    if (status === PageStatus.EDIT) 
-    {
+    if (status === PageStatus.EDIT) {
         return (
             <div className='container-fluid mt-2'>
 
@@ -324,7 +370,7 @@ export default function PaginaClientes() {
                         Voltar
                     </button>
                 </div>
-                                
+
                 <form onSubmit={deleteData}>
                     <div className='float-end mt-2'>
                         <button type='submit' className='btn btn-danger'>Deletar</button>

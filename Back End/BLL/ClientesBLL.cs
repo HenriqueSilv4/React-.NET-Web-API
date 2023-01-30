@@ -11,6 +11,22 @@ namespace Back_End.BLL
     public class ClientesBLL
     {
         private readonly DAO Context = new DAO();
+
+        public Clientes ConvertJSON(ClientesJSON json)
+        {
+            Clientes cliente = new Clientes();
+
+            cliente.IdCliente = json.IdCliente;
+
+            cliente.CPF = json.CPF;
+
+            cliente.Nome = json.Nome;
+
+            cliente.Celular = json.Celular;
+
+            return cliente;
+        }
+
         public ResponseResult Create(ClientesJSON json)
         {
             var response = new ResponseResult();
@@ -29,19 +45,13 @@ namespace Back_End.BLL
                     response.Erros.Add(new ErroJSON
                     {
                         Campo = "alerta",
-                        Mensagem = "Não foi possível realizar o cadastro.\nO CPF informado já está cadastrado no sistema."
+                        Mensagem = "Não foi possível realizar o cadastro. O CPF informado já está cadastrado no sistema."
                     });
 
                     throw new Exception();
                 }
 
-                var Cliente = new Clientes();
-
-                Cliente.CPF = json.CPF;
-
-                Cliente.Nome = json.Nome;
-
-                Cliente.Celular = json.Celular;
+                var Cliente = ConvertJSON(json);
 
                 Cliente.DataDoCadastro = DateTime.Now.Date;
 
