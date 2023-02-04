@@ -6,12 +6,13 @@ import { Button, Input, Space, Table, Modal, Form, notification, Popconfirm, Row
 import { ColumnsType, ColumnType } from 'antd/es/table'
 import { DeleteOutlined, EditOutlined, PlusCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import { FilterConfirmProps } from 'antd/es/table/interface'
+import React from 'react'
 
 interface DadosForm {
-    name: string | number | (string | number)[];
-    value?: any;
-    validating?: boolean;
-    errors?: string[];
+    name: string | number | (string | number)[]
+    value?: any
+    validating?: boolean
+    errors?: string[]
 }
 
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
@@ -26,20 +27,22 @@ export default function PaginaClientes() {
     const [formCadastro] = Form.useForm()
     const [modalCadastro, setModalCadastroAberto] = useState(false)
 
-    const [toaster, Notificacoes] = notification.useNotification();
+    const [toaster, Notificacoes] = notification.useNotification()
 
     const [listaClientes, setListaClientes] = useState<Clientes[]>()
 
     const Alerta = (mensagem: string, descricao: string, type: NotificationType) => {
         toaster[type]({
             message: mensagem,
-            description: descricao
-        });
-    };
+            description: descricao,
+            duration: 2.0,
+            key: 'feedback'
+        })
+    }
 
-    const filtrarPesquisa= (confirm: (param?: FilterConfirmProps) => void) => {
-        confirm();
-    };
+    const filtrarPesquisa = (confirm: (param?: FilterConfirmProps) => void) => {
+        confirm()
+    }
 
     const filtrarResultado = (dataIndex: DataIndex): ColumnType<Clientes> => ({
         filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, close }) => (
@@ -53,27 +56,27 @@ export default function PaginaClientes() {
                 />
                 <Space>
                     <Button
-                        type="primary"
+                        type='primary'
                         onClick={() => filtrarPesquisa(confirm)}
                         icon={<SearchOutlined />}
-                        size="small"
+                        size='small'
                         style={{ width: 90 }}
                     >
                         Buscar
                     </Button>
                     <Button
                         onClick={() => {
-                            setSelectedKeys([]);
+                            setSelectedKeys([])
                             confirm({ closeDropdown: true })
                         }}
-                        size="small"
+                        size='small'
                         style={{ width: 90 }}
                     >
                         Limpar
                     </Button>
                     <Button
-                        type="link"
-                        size="small"
+                        type='link'
+                        size='small'
                         onClick={() => {
                             close();
                         }}
@@ -109,11 +112,11 @@ export default function PaginaClientes() {
                     </a>
                     <a>
                         <Popconfirm
-                            title="Aviso"
-                            description="Deseja deletar esse registro ?"
+                            title='Aviso'
+                            description='Deseja deletar esse registro ?'
                             onConfirm={() => deletarCliente(record)}
-                            okText="Sim"
-                            cancelText="Não"
+                            okText='Sim'
+                            cancelText='Não'
                         >
                             <DeleteOutlined />
                         </Popconfirm>
@@ -224,14 +227,14 @@ export default function PaginaClientes() {
             <Col span={24}>
                 {Notificacoes}
 
-                <Button type="primary" icon={<PlusCircleOutlined />} style={{ float: 'right' }} onClick={() => { setModalCadastroAberto(true) }}>
+                <Button type='primary' icon={<PlusCircleOutlined />} style={{ float: 'right' }} onClick={() => { setModalCadastroAberto(true) }}>
                     Cadastrar Cliente
                 </Button>
 
-                <Modal title="Cadastrar Cliente"
+                <Modal title='Cadastrar Cliente'
                     open={modalCadastro}
-                    okText="Cadastrar"
-                    cancelText="Cancelar"
+                    okText='Cadastrar'
+                    cancelText='Cancelar'
                     onCancel={() => {
                         formCadastro.resetFields()
                         setModalCadastroAberto(false)
@@ -241,25 +244,25 @@ export default function PaginaClientes() {
                     }}
                 >
 
-                    <Form form={formCadastro} name="formCadastro" layout="vertical" autoComplete="off" onFinish={cadastrarCliente}>
-                        <Form.Item name="nome" label="Nome">
-                            <Input type="textarea" maxLength={128} showCount={true} />
+                    <Form form={formCadastro} name='formCadastro' layout='vertical' autoComplete='off' onFinish={cadastrarCliente}>
+                        <Form.Item name='nome' label='Nome'>
+                            <Input type='textarea' maxLength={128} showCount={true} />
                         </Form.Item>
 
-                        <Form.Item name="cpf" label="CPF">
-                            <Input type="textarea" maxLength={11} showCount={true} />
+                        <Form.Item name='cpf' label='CPF'>
+                            <Input type='textarea' maxLength={11} showCount={true} />
                         </Form.Item>
 
-                        <Form.Item name="celular" label="Celular">
-                            <Input type="textarea" maxLength={128} showCount={true} />
+                        <Form.Item name='celular' label='Celular'>
+                            <Input type='textarea' maxLength={128} showCount={true} />
                         </Form.Item>
                     </Form>
                 </Modal>
 
-                <Modal title="Editar Cliente"
+                <Modal title='Editar Cliente'
                     open={modalEditar}
-                    okText="Atualizar"
-                    cancelText="Cancelar"
+                    okText='Atualizar'
+                    cancelText='Cancelar'
                     onCancel={() => {
                         formEditar.resetFields()
                         setModalEditarAberto(false)
@@ -269,26 +272,26 @@ export default function PaginaClientes() {
                     }}
                 >
 
-                    <Form form={formEditar} name="formEditar" layout="vertical" autoComplete="off" onFinish={editarCliente}>
-                        <Form.Item name="idCliente" label="ID Cliente" hidden={true}>
-                            <Input type="textarea" maxLength={128} showCount={true} disabled={true} />
+                    <Form form={formEditar} name='formEditar' layout='vertical' autoComplete='off' onFinish={editarCliente}>
+                        <Form.Item name='idCliente' label='ID Cliente' hidden={true}>
+                            <Input type='textarea' maxLength={128} showCount={true} disabled={true} />
                         </Form.Item>
 
-                        <Form.Item name="nome" label="Nome">
-                            <Input type="textarea" maxLength={128} showCount={true} />
+                        <Form.Item name='nome' label='Nome'>
+                            <Input type='textarea' maxLength={128} showCount={true} />
                         </Form.Item>
 
-                        <Form.Item name="cpf" label="CPF">
-                            <Input type="textarea" maxLength={11} showCount={true} />
+                        <Form.Item name='cpf' label='CPF'>
+                            <Input type='textarea' maxLength={11} showCount={true} />
                         </Form.Item>
 
-                        <Form.Item name="celular" label="Celular">
-                            <Input type="textarea" maxLength={128} showCount={true} />
+                        <Form.Item name='celular' label='Celular'>
+                            <Input type='textarea' maxLength={128} showCount={true} />
                         </Form.Item>
                     </Form>
                 </Modal>
 
-                <Table key={"Lista De Clientes"} columns={colunasCliente} dataSource={listaClientes} />
+                <Table key={'Lista De Clientes'} columns={colunasCliente} dataSource={listaClientes} />
             </Col>
         </Row>
     )
