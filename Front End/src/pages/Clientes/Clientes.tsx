@@ -1,51 +1,60 @@
-import { PageStatus } from '../../enums/PageStatus'
-import { TipoAlerta } from '../../enums/TipoAlerta'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ResponseResult } from '../../interfaces/ResponseResult'
 import { Clientes } from '../../interfaces/Clientes'
 import axios from 'axios'
-import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
-import { Button, Input, InputRef, Space, Table } from 'antd'
+import { Button, Input, Space, Table, Modal, Form, notification, Popconfirm, Row, Col } from 'antd'
 import { ColumnsType, ColumnType } from 'antd/es/table'
-import { SearchOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, PlusCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import { FilterConfirmProps } from 'antd/es/table/interface'
-import { title } from 'process'
+
+interface DadosForm {
+    name: string | number | (string | number)[];
+    value?: any;
+    validating?: boolean;
+    errors?: string[];
+}
+
+type NotificationType = 'success' | 'info' | 'warning' | 'error'
 
 export default function PaginaClientes() {
 
-    const [data, setData] = useState<Clientes[]>()
-    const searchInput = useRef<InputRef>(null);
+    type DataIndex = keyof Clientes;
 
-    const handleSearch = (
-        selectedKeys: string[],
-        confirm: (param?: FilterConfirmProps) => void,
-        dataIndex: DataIndex,
-    ) => {
+    const [formEditar] = Form.useForm()
+    const [modalEditar, setModalEditarAberto] = useState(false)
+
+    const [formCadastro] = Form.useForm()
+    const [modalCadastro, setModalCadastroAberto] = useState(false)
+
+    const [toaster, Notificacoes] = notification.useNotification();
+
+    const [listaClientes, setListaClientes] = useState<Clientes[]>()
+
+    const Alerta = (mensagem: string, descricao: string, type: NotificationType) => {
+        toaster[type]({
+            message: mensagem,
+            description: descricao
+        });
+    };
+
+    const filtrarPesquisa= (confirm: (param?: FilterConfirmProps) => void) => {
         confirm();
     };
 
-    const handleReset = (clearFilters: () => void) => {
-        clearFilters();
-    };
-
-    type DataIndex = keyof Clientes;
-
     const filtrarResultado = (dataIndex: DataIndex): ColumnType<Clientes> => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, close }) => (
             <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
                 <Input
-                    ref={searchInput}
                     placeholder={`Buscar ${dataIndex}`}
                     value={selectedKeys[0]}
                     onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+                    onPressEnter={() => filtrarPesquisa(confirm)}
                     style={{ marginBottom: 8, display: 'block' }}
                 />
                 <Space>
                     <Button
                         type="primary"
-                        onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+                        onClick={() => filtrarPesquisa(confirm)}
                         icon={<SearchOutlined />}
                         size="small"
                         style={{ width: 90 }}
@@ -53,20 +62,14 @@ export default function PaginaClientes() {
                         Buscar
                     </Button>
                     <Button
-                        onClick={() => clearFilters && handleReset(clearFilters)}
+                        onClick={() => {
+                            setSelectedKeys([]);
+                            confirm({ closeDropdown: true })
+                        }}
                         size="small"
                         style={{ width: 90 }}
                     >
-                        Resetar
-                    </Button>
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => {
-                            confirm({ closeDropdown: false });
-                        }}
-                    >
-                        Filtrar
+                        Limpar
                     </Button>
                     <Button
                         type="link"
@@ -75,7 +78,7 @@ export default function PaginaClientes() {
                             close();
                         }}
                     >
-                        close
+                        Fechar
                     </Button>
                 </Space>
             </div>
@@ -88,325 +91,205 @@ export default function PaginaClientes() {
                 .toString()
                 .toLowerCase()
                 .includes((value as string).toLowerCase()),
-        onFilterDropdownOpenChange: (visible) => {
-            if (visible) {
-                setTimeout(() => searchInput.current?.select(), 100);
-            }
-        },
     });
 
-    const colunas: ColumnsType<Clientes> = [
+    const colunasCliente: ColumnsType<Clientes> = [
+        {
+            title: null,
+            dataIndex: 'editar',
+            width: '10%',
+            render: (_, record) =>
+                <span style={{ display: 'flex', justifyContent: 'space-around' }}>
+                    <a onClick={() => {
+                        setModalEditarAberto(true)
+                        formEditar.setFieldsValue(record)
+                    }}
+                    >
+                        <EditOutlined />
+                    </a>
+                    <a>
+                        <Popconfirm
+                            title="Aviso"
+                            description="Deseja deletar esse registro ?"
+                            onConfirm={() => deletarCliente(record)}
+                            okText="Sim"
+                            cancelText="Não"
+                        >
+                            <DeleteOutlined />
+                        </Popconfirm>
+                    </a>
+                </span>
+        },
         {
             title: 'Nome',
             dataIndex: 'nome',
             ...filtrarResultado('nome'),
-            width: '25%'
+            width: '20%'
         },
         {
             title: 'CPF',
             dataIndex: 'cpf',
             ...filtrarResultado('cpf'),
-            width: '25%'
+            width: '20%'
         },
         {
             title: 'Celular',
             dataIndex: 'celular',
             ...filtrarResultado('celular'),
-            width: '25%'
+            width: '20%'
         },
         {
             title: 'Data do Cadastro',
             dataIndex: 'dataDoCadastro',
-            width: '25%'
+            width: '20%'
         },
     ];
 
-    const [exception, setException] = useState<ResponseResult>()
-
-    const [formCreateData, setFormCreateData] = useState<Clientes>({
-        idCliente: '0',
-        cpf: '',
-        nome: '',
-        celular: '',
-        dataDoCadastro: ''
-    })
-
-    const [formUpdateData, setFormUpdateData] = useState<Clientes>({
-        idCliente: '',
-        cpf: '',
-        nome: '',
-        celular: '',
-        dataDoCadastro: ''
-    })
-
-    const [isFetching, setIsFetching] = useState(true)
-
-    const [status, setPageStatus] = useState<PageStatus>()
-
-    function Alerta(mensagem: string, Tipo: TipoAlerta) {
-        switch (Tipo) {
-            case TipoAlerta.SUCESSO: {
-                return (
-                    toast.success(mensagem)
-                )
-            }
-            case TipoAlerta.ERRO: {
-                return (
-                    toast.error(mensagem)
-                )
-            }
-            case TipoAlerta.AVISO: {
-                return (
-                    toast.warning(mensagem)
-                )
-            }
-        }
-    }
-
-    function validarCampo(campo: string) {
-        const listaErros = exception?.erros.filter((x) => x.campo === campo).map(item =>
-            <div className='invalid-feedback'>
-                {item.mensagem}
-            </div>
-        )
-
-        const Campo = document.getElementById(campo)
-
-        if (listaErros !== undefined && listaErros?.length > 0) {
-            Campo?.classList.add('is-invalid')
-        }
-        else {
-            Campo?.classList.remove('is-invalid')
-        }
-
-        return listaErros
-    }
-
-    function alimentarFormCreate(e: React.ChangeEvent<HTMLInputElement>) {
-
-        const { value, name } = e.target
-
-        setFormCreateData((prevState) => ({
-            ...prevState,
-            [name]: value,
-        }))
-
-    }
-
-    function alimentarFormUpdate(e: React.ChangeEvent<HTMLInputElement>) {
-
-        const { value, name } = e.target
-
-        setFormUpdateData((prevState) => ({
-            ...prevState,
-            [name]: value,
-        }))
-
-    }
-
-    function createData(e: React.FormEvent<HTMLFormElement>) {
-
-        e.preventDefault()
-
-        axios.post<ResponseResult>('https://localhost:44398/api/Clientes/Cadastrar', formCreateData)
-            .then(response => {
-                setException(response.data)
-                if (response.data !== undefined) {
-                    if (response.data.sucesso === true) {
-                        readData()
-                        setPageStatus(PageStatus.INDEX)
-                        Alerta('Cadastro criado com sucesso.', TipoAlerta.SUCESSO)
-                    }
-                }
-            })
-    }
-
-    function readData() {
-        return (
-            axios.get<Clientes[]>('https://localhost:44398/api/Clientes/Selecionar')
-                .then(response => {
-                    setIsFetching(false)
-                    setData(response.data)
-                })
-                .finally(() => {
-                    setPageStatus(PageStatus.INDEX)
-                })
-        )
-    }
-
-    function updateData(e: React.FormEvent<HTMLFormElement>) {
-
-        e.preventDefault()
-
-        axios.put<ResponseResult>('https://localhost:44398/api/Clientes/Atualizar', formUpdateData)
-            .then(response => {
-                setException(response.data)
-                if (response.data !== undefined) {
-                    if (response.data.sucesso === true) {
-                        readData()
-                        setPageStatus(PageStatus.INDEX)
-                        Alerta('Registro atualizado com sucesso.', TipoAlerta.SUCESSO)
-                    }
-                }
-            })
-    }
-
-    function deleteData(e: React.FormEvent<HTMLFormElement>) {
-
-        e.preventDefault()
-
-        axios.delete<ResponseResult>('https://localhost:44398/api/Clientes/Deletar', { data: formUpdateData })
-            .then(response => {
-                setException(response.data)
+    const cadastrarCliente = (values: any) => {
+        axios.post<ResponseResult>('https://localhost:44398/api/Clientes/Cadastrar', values).then(response => {
+            if (response.data !== undefined) {
                 if (response.data.sucesso === true) {
-                    readData()
-                    setPageStatus(PageStatus.INDEX)
-                    Alerta('Registro deletado com sucesso.', TipoAlerta.SUCESSO)
+                    setModalCadastroAberto(false)
+                    formCadastro.resetFields()
+                    Alerta('Sucesso', 'Cadastro criado com sucesso.', 'success')
+                    carregarClientes()
                 }
                 else {
 
+                    Alerta('Erro', 'Não foi possível realizar o cadastro.', 'error')
+
+                    let listaErros: DadosForm[] = [];
+
+                    response.data.erros.map((e) => {
+                        listaErros.push({ name: e.campo, value: e.valor, validating: true, errors: [e.mensagem] })
+                    })
+
+                    formCadastro.setFields(listaErros)
                 }
+            }
+        })
+    }
+
+    const carregarClientes = () => {
+        return (
+            axios.get<Clientes[]>('https://localhost:44398/api/Clientes/Selecionar').then(response => {
+                response.data.map(x => x.key = x.idCliente)
+                setListaClientes(response.data)
             })
+        )
+    }
+
+    const editarCliente = (values: any) => {
+        axios.put<ResponseResult>('https://localhost:44398/api/Clientes/Atualizar', values).then(response => {
+            if (response.data !== undefined) {
+                if (response.data.sucesso === true) {
+                    Alerta('Sucesso', 'Cadastro criado com sucesso.', 'success')
+                    formEditar.resetFields()
+                    setModalEditarAberto(false)
+                    carregarClientes()
+                }
+                else {
+                    Alerta('Erro', 'Não foi possível realizar o cadastro.', 'error')
+
+                    let listaErros: DadosForm[] = [];
+
+                    response.data.erros.map((e) => {
+                        listaErros.push({ name: e.campo, value: e.valor, validating: true, errors: [e.mensagem] })
+                    })
+
+                    formEditar.setFields(listaErros)
+                }
+            }
+        })
+    }
+
+    const deletarCliente = (values: any) => {
+        axios.delete<ResponseResult>('https://localhost:44398/api/Clientes/Deletar', { data: values }).then(response => {
+            if (response.data.sucesso === true) {
+                carregarClientes()
+                Alerta('Sucesso', 'Registro deletado com sucesso.', 'success')
+            }
+            else {
+
+            }
+        })
     }
 
     useEffect(() => {
-        readData()
+        carregarClientes()
     }, [])
 
-    if (status === PageStatus.INDEX && !isFetching) {
-        return (
-            <div className='container-fluid mt-2'>
-
-                <div className='d-flex justify-content-between'>
-
-                    <button onClick={() => setPageStatus(PageStatus.NEW)} className='btn btn-success p-2'>
-                        Cadastrar
-                    </button>
-
-                </div>
-
-                <Table columns={colunas} dataSource={data} />
-
-            </div>
-        )
-    }
-
-    if (status === PageStatus.NEW) {
-        return (
-            <div className='container-fluid mt-2'>
-
-                <ToastContainer
-                    position='bottom-right'
-                    autoClose={5000}
-                    hideProgressBar={true}
-                    newestOnTop={true}
-                    closeButton={false}
-                    closeOnClick={false}
-                    rtl={false}
-                    pauseOnFocusLoss={false}
-                    draggable={false}
-                    pauseOnHover={false}
-                    theme='light'
-                />
-
-                <div className='d-flex justify-content-between'>
-                    <h4>
-                        Cadastrar Cliente
-                    </h4>
-                    <button onClick={() => setPageStatus(PageStatus.INDEX)} className='btn btn-primary p-2'>
-                        Voltar
-                    </button>
-                </div>
-
-                <div className='shadow-lg rounded w-50 mx-auto mt-5'>
-                    <form onSubmit={createData} className='d-grid gap-3 p-5'>
-                        <div className='form-floating'>
-                            <input onChange={alimentarFormCreate} value={formCreateData.cpf} type='text' placeholder='#' minLength={11} maxLength={11} autoComplete={'off'} className='form-control' id='cpf' name='cpf' />
-                            <label htmlFor='cpf' className='text-dark'>CPF</label>
-                            {validarCampo('cpf')}
-                        </div>
-                        <div className='form-floating'>
-                            <input onChange={alimentarFormCreate} value={formCreateData.nome} type='text' placeholder='#' maxLength={128} autoComplete={'off'} className='form-control' id='nome' name='nome' />
-                            <label htmlFor='nome' className='text-dark'>Nome</label>
-                            {validarCampo('nome')}
-                        </div>
-                        <div className='form-floating'>
-                            <input onChange={alimentarFormCreate} value={formCreateData.celular} type='text' placeholder='#' maxLength={32} autoComplete={'off'} className='form-control' id='celular' name='celular' />
-                            <label htmlFor='celular' className='text-dark'>Celular</label>
-                            {validarCampo('celular')}
-                        </div>
-                        <div className='d-flex justify-content-center'>
-                            <button type='submit' className='btn btn-success w-25'>Cadastrar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        )
-    }
-
-    if (status === PageStatus.EDIT) {
-        return (
-            <div className='container-fluid mt-2'>
-
-                <ToastContainer
-                    position='bottom-right'
-                    autoClose={5000}
-                    hideProgressBar={true}
-                    newestOnTop={true}
-                    closeButton={false}
-                    closeOnClick={false}
-                    rtl={false}
-                    pauseOnFocusLoss={false}
-                    draggable={false}
-                    pauseOnHover={false}
-                    theme='light'
-                />
-
-                <div className='d-flex justify-content-between'>
-                    <h4>
-                        Editar Cliente
-                    </h4>
-                    <button onClick={() => setPageStatus(PageStatus.INDEX)} className='btn btn-primary p-2'>
-                        Voltar
-                    </button>
-                </div>
-
-                <form onSubmit={deleteData}>
-                    <div className='float-end mt-2'>
-                        <button type='submit' className='btn btn-danger'>Deletar</button>
-                    </div>
-                </form>
-
-                <div className='shadow-lg rounded w-50 mx-auto mt-5'>
-
-                    <form onSubmit={updateData} className='d-grid gap-3 p-5'>
-                        <div className='form-floating'>
-                            <input onChange={alimentarFormUpdate} value={formUpdateData?.cpf} type='text' disabled placeholder='#' maxLength={11} autoComplete={'off'} className='form-control' id='cpf' name='cpf' />
-                            <label htmlFor='cpf' className='text-dark'>CPF</label>
-                        </div>
-                        <div className='form-floating'>
-                            <input onChange={alimentarFormUpdate} value={formUpdateData?.nome} type='text' placeholder='#' maxLength={128} autoComplete={'off'} className='form-control' id='nome' name='nome' />
-                            <label htmlFor='nome' className='text-dark'>Nome</label>
-                            {validarCampo('nome')}
-                        </div>
-                        <div className='form-floating'>
-                            <input onChange={alimentarFormUpdate} value={formUpdateData?.celular} type='text' placeholder='#' maxLength={32} autoComplete={'off'} className='form-control' id='celular' name='celular' />
-                            <label htmlFor='celular' className='text-dark'>Celular</label>
-                            {validarCampo('celular')}
-                        </div>
-                        <div className='d-flex justify-content-center'>
-                            <button type='submit' className='btn btn-primary'>Salvar</button>
-                        </div>
-                    </form>
-                </div>
-
-            </div>
-        )
-    }
-
     return (
-        <div className='mt-5'>
-            <h4>Carregando página...</h4>
-        </div>
+        <Row>
+            <Col span={24}>
+                {Notificacoes}
+
+                <Button type="primary" icon={<PlusCircleOutlined />} style={{ float: 'right' }} onClick={() => { setModalCadastroAberto(true) }}>
+                    Cadastrar Cliente
+                </Button>
+
+                <Modal title="Cadastrar Cliente"
+                    open={modalCadastro}
+                    okText="Cadastrar"
+                    cancelText="Cancelar"
+                    onCancel={() => {
+                        formCadastro.resetFields()
+                        setModalCadastroAberto(false)
+                    }}
+                    onOk={() => {
+                        formCadastro.submit()
+                    }}
+                >
+
+                    <Form form={formCadastro} name="formCadastro" layout="vertical" autoComplete="off" onFinish={cadastrarCliente}>
+                        <Form.Item name="nome" label="Nome">
+                            <Input type="textarea" maxLength={128} showCount={true} />
+                        </Form.Item>
+
+                        <Form.Item name="cpf" label="CPF">
+                            <Input type="textarea" maxLength={11} showCount={true} />
+                        </Form.Item>
+
+                        <Form.Item name="celular" label="Celular">
+                            <Input type="textarea" maxLength={128} showCount={true} />
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                <Modal title="Editar Cliente"
+                    open={modalEditar}
+                    okText="Atualizar"
+                    cancelText="Cancelar"
+                    onCancel={() => {
+                        formEditar.resetFields()
+                        setModalEditarAberto(false)
+                    }}
+                    onOk={() => {
+                        formEditar.submit()
+                    }}
+                >
+
+                    <Form form={formEditar} name="formEditar" layout="vertical" autoComplete="off" onFinish={editarCliente}>
+                        <Form.Item name="idCliente" label="ID Cliente" hidden={true}>
+                            <Input type="textarea" maxLength={128} showCount={true} disabled={true} />
+                        </Form.Item>
+
+                        <Form.Item name="nome" label="Nome">
+                            <Input type="textarea" maxLength={128} showCount={true} />
+                        </Form.Item>
+
+                        <Form.Item name="cpf" label="CPF">
+                            <Input type="textarea" maxLength={11} showCount={true} />
+                        </Form.Item>
+
+                        <Form.Item name="celular" label="Celular">
+                            <Input type="textarea" maxLength={128} showCount={true} />
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                <Table key={"Lista De Clientes"} columns={colunasCliente} dataSource={listaClientes} />
+            </Col>
+        </Row>
     )
 }

@@ -102,6 +102,8 @@ namespace Back_End.BLL
 
                 Cliente.Nome = json.Nome;
 
+                Cliente.CPF = json.CPF;
+
                 Cliente.Celular = json.Celular;
 
                 Context.Clientes.Update(Cliente);
@@ -158,30 +160,43 @@ namespace Back_End.BLL
         {
             var Erros = new List<ErroJSON>();
 
+            if(json.CPF == null)
+            {
+                Erros.Add(new ErroJSON
+                {
+                    Campo = "cpf",
+                    Mensagem = "O campo não pode estar vazio.",
+                    Valor = json.CPF
+                });
+            }
+
             if(string.IsNullOrEmpty(json.CPF) || string.IsNullOrWhiteSpace(json.CPF))
             {
                 Erros.Add(new ErroJSON
                 {
                     Campo = "cpf",
-                    Mensagem = "O campo não pode estar vazio."
+                    Mensagem = "O campo não pode estar vazio.",
+                    Valor = json.CPF
                 });
             }
 
-            if(json.CPF.Any(char.IsLetter))
+            if(json.CPF != null && json.CPF.Any(char.IsLetter))
             {
                 Erros.Add(new ErroJSON
                 {
                     Campo = "cpf",
-                    Mensagem = "O campo não pode conter letras."
+                    Mensagem = "O campo não pode conter letras.",
+                    Valor = json.CPF
                 });
             }
 
-            if(json.CPF.Length != 11)
+            if(json.CPF != null && json.CPF.Length != 11)
             {
                 Erros.Add(new ErroJSON
                 {
                     Campo = "cpf",
-                    Mensagem = "Digite todos os 11 caracteres para validar o CPF."
+                    Mensagem = "Digite todos os 11 caracteres para validar o CPF.",
+                    Valor = json.CPF
                 });
             }
 
@@ -190,16 +205,18 @@ namespace Back_End.BLL
                 Erros.Add(new ErroJSON
                 {
                     Campo = "nome",
-                    Mensagem = "O campo não pode estar vazio."
+                    Mensagem = "O campo não pode estar vazio.",
+                    Valor = json.Nome
                 });
             }
 
-            if(json.Nome.Any(char.IsDigit))
+            if(json.Nome != null && json.Nome.Any(char.IsDigit))
             {
                 Erros.Add(new ErroJSON
                 {
                     Campo = "nome",
-                    Mensagem = "O campo não pode conter números."
+                    Mensagem = "O campo não pode conter números.",
+                    Valor = json.Nome
                 });
             }
 
@@ -208,16 +225,18 @@ namespace Back_End.BLL
                 Erros.Add(new ErroJSON
                 {
                     Campo = "celular",
-                    Mensagem = "O campo não pode estar vazio."
+                    Mensagem = "O campo não pode estar vazio.",
+                    Valor = json.Celular
                 });
             }
 
-            if(json.Celular.Any(char.IsLetter))
+            if(json.Celular != null && json.Celular.Any(char.IsLetter))
             {
                 Erros.Add(new ErroJSON
                 {
                     Campo = "celular",
-                    Mensagem = "O campo não pode conter letras."
+                    Mensagem = "O campo não pode conter letras.",
+                    Valor = json.Celular
                 });
             }
 

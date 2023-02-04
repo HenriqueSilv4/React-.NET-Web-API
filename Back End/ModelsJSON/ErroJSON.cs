@@ -5,5 +5,6 @@ namespace CrudEstudo
         public string Campo { get; set; }
         public string Mensagem { get; set; }
 
+        public string Valor { get; set; }
     }
 }
