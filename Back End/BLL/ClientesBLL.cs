@@ -16,7 +16,7 @@ namespace Back_End.BLL
         {
             Clientes cliente = new Clientes();
 
-            cliente.IdCliente = json.IdCliente;
+            cliente.IDCliente = json.IDCliente;
 
             cliente.CPF = json.CPF;
 
@@ -89,7 +89,7 @@ namespace Back_End.BLL
                     throw new Exception();
                 }
 
-                if(!Context.Clientes.Any(x => x.IdCliente.Equals(json.IdCliente)))
+                if(!Context.Clientes.Any(x => x.IDCliente.Equals(json.IDCliente)))
                 {
                     response.Erros.Add(new ErroJSON
                     {
@@ -98,7 +98,7 @@ namespace Back_End.BLL
                     });
                 }
 
-                var Cliente = Context.Clientes.Find(json.IdCliente);
+                var Cliente = Context.Clientes.Find(json.IDCliente);
 
                 Cliente.Nome = json.Nome;
 
@@ -129,7 +129,7 @@ namespace Back_End.BLL
             try
             {
 
-                if(!Context.Clientes.Any(x => x.IdCliente.Equals(json.IdCliente)))
+                if(!Context.Clientes.Any(x => x.IDCliente.Equals(json.IDCliente)))
                 {
                     response.Erros.Add(new ErroJSON
                     {
@@ -138,7 +138,7 @@ namespace Back_End.BLL
                     });
                 }
 
-                var Cliente = Context.Clientes.Find(json.IdCliente);
+                var Cliente = Context.Clientes.Find(json.IDCliente);
 
                 Context.Clientes.Remove(Cliente);
                

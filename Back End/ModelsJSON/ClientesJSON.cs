@@ -4,7 +4,7 @@ namespace CrudEstudo
 {
     public class ClientesJSON
     {
-        public int IdCliente { get; set; }
+        public int IDCliente { get; set; }
 
         public string CPF { get; set; }
 

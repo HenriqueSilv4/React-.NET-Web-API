@@ -12,17 +12,17 @@ namespace Back_End.Models
     public partial class Clientes
     {
         [Key]
-        public int IdCliente { get; set; }
-        [Required]
-        [StringLength(11)]
-        public string CPF { get; set; }
+        public int IDCliente { get; set; }
         [Required]
         [StringLength(128)]
         public string Nome { get; set; }
         [Required]
-        [StringLength(32)]
+        [StringLength(128)]
+        public string CPF { get; set; }
+        [Required]
+        [StringLength(128)]
         public string Celular { get; set; }
-        [Column(TypeName = "date")]
+        [Column(TypeName = "datetime")]
         public DateTime DataDoCadastro { get; set; }
     }
 }
