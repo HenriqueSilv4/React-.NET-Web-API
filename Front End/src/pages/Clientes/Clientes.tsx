@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ResponseResult } from '../../interfaces/ResponseResult'
 import { Clientes } from '../../interfaces/Clientes'
 import axios from 'axios'
-import { Button, Input, Space, Table, Modal, Form, notification, Popconfirm, Row, Col } from 'antd'
+import { Button, Input, Space, Table, Modal, Form, notification, Popconfirm, Row, Col, Tooltip } from 'antd'
 import { ColumnsType, ColumnType } from 'antd/es/table'
 import { DeleteOutlined, EditOutlined, PlusCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import { FilterConfirmProps } from 'antd/es/table/interface'
@@ -100,26 +100,30 @@ export default function PaginaClientes() {
         {
             title: null,
             dataIndex: 'editar',
-            width: '10%',
+            width: '5%',
             render: (_, record) =>
                 <span style={{ display: 'flex', justifyContent: 'space-around' }}>
-                    <a onClick={() => {
-                        setModalEditarAberto(true)
-                        formEditar.setFieldsValue(record)
-                    }}
-                    >
-                        <EditOutlined />
-                    </a>
-                    <a>
-                        <Popconfirm
-                            title='Aviso'
-                            description='Deseja deletar esse registro ?'
-                            onConfirm={() => deletarCliente(record)}
-                            okText='Sim'
-                            cancelText='Não'
+                    <Tooltip title='Editar registro' mouseLeaveDelay={0.1}>
+                        <a onClick={() => {
+                            setModalEditarAberto(true)
+                            formEditar.setFieldsValue(record)
+                        }}
                         >
-                            <DeleteOutlined />
-                        </Popconfirm>
+                            <EditOutlined />
+                        </a>
+                    </Tooltip>
+                    <a>
+                        <Tooltip title='Deletar registro' mouseLeaveDelay={0.1}>
+                            <Popconfirm
+                                title='Aviso'
+                                description='Deseja deletar esse registro ?'
+                                onConfirm={() => deletarCliente(record)}
+                                okText='Sim'
+                                cancelText='Não'
+                            >
+                                <DeleteOutlined style={{ color: 'red' }} />
+                            </Popconfirm>
+                        </Tooltip>
                     </a>
                 </span>
         },
@@ -225,11 +229,19 @@ export default function PaginaClientes() {
     return (
         <Row>
             <Col span={24}>
+
                 {Notificacoes}
 
-                <Button type='primary' icon={<PlusCircleOutlined />} style={{ float: 'right' }} onClick={() => { setModalCadastroAberto(true) }}>
-                    Cadastrar Cliente
-                </Button>
+                <Tooltip title='Cadastrar cliente' mouseLeaveDelay={0.1}>
+                    <Button
+                        type='primary'
+                        size={'large'}
+                        icon={<PlusCircleOutlined />}
+                        shape='circle'
+                        style={{ float: 'right', marginBottom: '10px' }}
+                        onClick={() => { setModalCadastroAberto(true) }}
+                    />
+                </Tooltip>
 
                 <Modal title='Cadastrar Cliente'
                     open={modalCadastro}
